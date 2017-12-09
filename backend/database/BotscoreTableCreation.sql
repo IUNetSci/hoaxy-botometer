@@ -7,6 +7,7 @@ CREATE TABLE public.botscore
   user_id bigint NOT NULL,
   screen_name character varying(15),
   time_stamp timestamp with time zone DEFAULT now(),
+  botometer_training_version DATE,
   all_bot_scores jsonb,
   bot_score_english real,
   bot_score_universal real,
