@@ -207,6 +207,8 @@ var app = new Vue({
             show: false,
             top: 0,
             left: 0,
+            delay_timeout: 0,
+            delay: 200
         }
 
     },
@@ -270,15 +272,19 @@ var app = new Vue({
         hoverTooltip: function(e){
             var element = e.target;
             var element_offset = this.getOffset(element);
-            this.tooltip.title= element.title;
-            this.tooltip.show= true;
-            this.tooltip.top= element_offset.bottom;
-            this.tooltip.left= element_offset.left;
-            element.title = "";
-            console.debug(element.id);
+            var vm = this;
 
+            vm.tooltip.title= element.title;
+            element.title = "";
+            this.tooltip.delay_timeout = setTimeout(function(){
+                vm.tooltip.show= true;
+                vm.tooltip.top= element_offset.bottom;
+                vm.tooltip.left= element_offset.left;
+                console.debug(element.id);
+            }, this.tooltip.delay);
         },
         hideTooltip: function(e){
+            clearTimeout(this.tooltip.delay_timeout);
             var target = e.target;
             target.title = this.tooltip.title;
             this.tooltip.title= "";
