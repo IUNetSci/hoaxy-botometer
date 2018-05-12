@@ -165,7 +165,7 @@ def hello():
 @api.route("/api/scores", methods=["GET", "POST"])
 def getScores():
     """
-    The scorese retrival endpoint.
+    The scorese retrieval endpoint.
     Parse the query string, get user scores according to user_ids then return as json.
     """
     if request.headers.get("origin") != "http://iuni.iu.edu":
