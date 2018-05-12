@@ -171,8 +171,9 @@ def getScores():
     if request.headers.get("origin") != "http://iuni.iu.edu":
         return jsonify({'success': False}), 405
 
-    print("Start to processing ...")
-    t1 = time.time()
+    #print("Start to processing ...")
+    #t1 = time.time()
+
     # get the query string according to different HTTP methods
     if request.method == "GET":
         user_ids_query = request.args.get("user_id")
@@ -203,8 +204,9 @@ def getScores():
         total_request_number += len(user_ids)
         db_results += dbQueryUserIDIn(user_ids)
 
-    t2 = time.time()
-    print("Done parsing the query, start to SQL, %.4f" % (t2-t1))
+    #t2 = time.time()
+    #print("Done parsing the query, start to SQL, %.4f" % (t2-t1))
+
     if user_names_query:
         if isinstance(user_names_query, list):
             user_names = user_names_query
@@ -213,9 +215,9 @@ def getScores():
         db_results += dbQueryUserScreenNameIn(user_names)
         total_request_number += len(user_names)
 
-    t3 = time.time()
-    print("Account number: %d" % total_request_number)
-    print("Done SQL, start to return, %.4f" % (t3-t2))
+    #t3 = time.time()
+    #print("Account number: %d" % total_request_number)
+    #print("Done SQL, start to return, %.4f" % (t3-t2))
 
     user_scores = []
     user_to_update = []
@@ -259,14 +261,14 @@ def getScores():
         "result": user_scores
     }
 
-    t4 = time.time()
-    print("Done return, %.4f" % (t4-t3))
+    #t4 = time.time()
+    #print("Done return, %.4f" % (t4-t3))
 
     dbIncreaseNumRequests(user_to_update)
 
-    t5 = time.time()
+    #t5 = time.time()
 
-    print("Done increase, %.4f" % (t5-t4))
+    #print("Done increase, %.4f" % (t5-t4))
 
     return jsonify(response)
 
