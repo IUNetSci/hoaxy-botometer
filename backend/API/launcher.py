@@ -10,7 +10,7 @@ from collections import Counter
 
 api = Flask(__name__)
 CORS(api)
-connection_string = open('.db.connection').read()
+connection_string = open('.db.connection.lenny').read()
 botscore_engine = sqlalchemy.create_engine(connection_string)
 botscore_connection = botscore_engine.connect()
 
@@ -214,6 +214,7 @@ def getScores():
         total_request_number += len(user_names)
 
     t3 = time.time()
+    print("Account number: %d" % total_request_number)
     print("Done SQL, start to return, %.4f" % (t3-t2))
 
     user_scores = []
