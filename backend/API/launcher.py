@@ -13,6 +13,7 @@ CORS(api)
 connection_string = open('.db.connection.lenny').read()
 botscore_engine = sqlalchemy.create_engine(connection_string)
 botscore_connection = botscore_engine.connect()
+current_botometer_version = None
 
 with open(".pass") as f:
     api.config['BASIC_AUTH_USERNAME'], api.config['BASIC_AUTH_PASSWORD'] = f.readline().strip().split(",")
@@ -23,7 +24,10 @@ def dbQueryUserIDIn(user_ids):
     result = botscore_connection.execute(
         sqlalchemy.text(
             """
-            SELECT DISTINCT ON (user_id) id, user_id, screen_name, all_bot_scores, bot_score_english, bot_score_universal, time_stamp, tweets_per_day, num_submitted_timeline_tweets, num_requests
+            SELECT DISTINCT ON (user_id) id, user_id, screen_name,
+            all_bot_scores, bot_score_english, bot_score_universal, time_stamp,
+            tweets_per_day, num_submitted_timeline_tweets, num_requests,
+            model_version
             FROM botscore
             WHERE user_id IN :user_ids
             ORDER BY user_id, time_stamp DESC
@@ -40,7 +44,10 @@ def dbQueryUserScreenNameIn(user_names):
     result = botscore_connection.execute(
         sqlalchemy.text(
             """
-            SELECT DISTINCT ON (screen_name) id, user_id, screen_name, all_bot_scores, bot_score_english, bot_score_universal, time_stamp, tweets_per_day, num_submitted_timeline_tweets, num_requests
+            SELECT DISTINCT ON (screen_name) id, user_id, screen_name,
+            all_bot_scores, bot_score_english, bot_score_universal, time_stamp,
+            tweets_per_day, num_submitted_timeline_tweets, num_requests,
+            model_version
             from botscore
             where screen_name IN :screen_names
             ORDER BY screen_name, time_stamp DESC
@@ -123,28 +130,41 @@ def dbInsertFeedback(feedback):
     return result
 
 
-def getUserRecordStatus(user_entry, tweets_per_day, num_requests, config_file):
-    if user_entry["timestamp"]:
-        timedelta_age = datetime.now() - user_entry["timestamp"].replace(tzinfo=None)
-        age_of_user = timedelta_age.total_seconds()
+def getUserRecordStatus(user_entry, tweets_per_day, num_requests, config_file,
+model_version):
+    if model_version == current_botometer_version:
+        if user_entry["timestamp"]:
+            timedelta_age = datetime.now() - user_entry["timestamp"].replace(tzinfo=None)
+            age_of_user = timedelta_age.total_seconds()
 
-        if age_of_user < int(config_file.get("FlowChart", "age_min")):
-            return True
-        elif age_of_user > int(config_file.get("FlowChart", "age_max")):
-            return False
-        else:
-            if tweets_per_day:
-                expected_tweets = age_of_user * tweets_per_day / 86400.
-                if expected_tweets > int(config_file.get("FlowChart", "expected_tweets_max"))\
-                        or num_requests > int(config_file.get("FlowChart", "reqs_max")):
-                    return False
-                else:
-                    return True
-            else:
+            if age_of_user < int(config_file.get("FlowChart", "age_min")):
+                return True
+            elif age_of_user > int(config_file.get("FlowChart", "age_max")):
                 return False
+            else:
+                if tweets_per_day:
+                    expected_tweets = age_of_user * tweets_per_day / 86400.
+                    if expected_tweets > int(config_file.get("FlowChart", "expected_tweets_max"))\
+                            or num_requests > int(config_file.get("FlowChart", "reqs_max")):
+                        return False
+                    else:
+                        return True
+                else:
+                    return False
+        else:
+            return None
     else:
-        return None
+        return False
 
+
+def getNewestVersion():
+    result = botscore_connection.execute(
+        sqlalchemy.text(
+            """
+            SELECT model_version FROM botscore WHERE id = (select max(id) from botscore);
+            """
+        ))
+    return result.fetchall()[0][0]
 
 @api.template_filter('strftime')
 def _jinja2_filter_datetime(date, fmt=None):
@@ -168,6 +188,9 @@ def getScores():
     The scorese retrieval endpoint.
     Parse the query string, get user scores according to user_ids then return as json.
     """
+    global current_botometer_version
+    if not current_botometer_version:
+        current_botometer_version = getNewestVersion()
     if request.headers.get("origin") != "http://iuni.iu.edu":
         return jsonify({'success': False}), 405
 
@@ -246,8 +269,10 @@ def getScores():
 
         user_tweet_per_day = row[7]
         num_requests = row[9]
+        model_version = row[10]
         user_record["fresh"] = getUserRecordStatus(
-            user_record, user_tweet_per_day, num_requests, config_file
+            user_record, user_tweet_per_day, num_requests, config_file,
+            model_version
         )
         user_scores.append(user_record)
         user_to_update.append(row[0])
