@@ -269,6 +269,22 @@ def getScores():
                 "english": row[4],
                 "universal": row[5]
             },
+            "display_scores":{
+                "english": round(row[4] * 5, 1) if row[4] else None ,
+                "universal": round(row[5] * 5, 1) if row[5] else None,
+                "friend": round(all_bot_scores.get("friend") * 5, 1) if
+                all_bot_scores.get("friend") else None,
+                "sentiment": round(all_bot_scores.get("sentiment") * 5, 1) if
+                all_bot_scores.get("sentiment") else None,
+                "temporal": round(all_bot_scores.get("temporal") * 5, 1) if
+                all_bot_scores.get("temporal") else None,
+                "user": round(all_bot_scores.get("user") * 5, 1) if
+                all_bot_scores.get("user") else None,
+                "network": round(all_bot_scores.get("network") * 5, 1) if
+                all_bot_scores.get("network") else None,
+                "content": round(all_bot_scores.get("content") * 5, 1) if
+                all_bot_scores.get("content") else None
+            },
             "timestamp": row[6]
         }
 
