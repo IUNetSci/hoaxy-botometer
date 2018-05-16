@@ -16,6 +16,12 @@ botscore_engine = sqlalchemy.create_engine(connection_string)
 botscore_connection = botscore_engine.connect()
 current_botometer_version = None
 
+# load the config file
+config_file = configparser.ConfigParser()
+config_file.read("./config.cfg")
+
+known_domain = config_file.get("KnownDomain", "known_domain").split(",")
+
 gunicorn_logger = logging.getLogger('gunicorn.error')
 api.logger.handlers = gunicorn_logger.handlers
 api.logger.setLevel(gunicorn_logger.level)
@@ -196,7 +202,11 @@ def getScores():
     global current_botometer_version
     if not current_botometer_version:
         current_botometer_version = getNewestVersion()
-    if request.headers.get("origin") != "http://iuni.iu.edu":
+    #print(request.headers.get("origin"))
+    #print(request.headers.get("Host"))
+    #print(request.headers.get("referer"))
+    if (request.headers.get("origin") not in known_domain) and (request.headers.get("referer") not in known_domain) :
+        print("good")
         return jsonify({'success': False}), 405
 
     #print("Start to processing ...")
@@ -217,9 +227,6 @@ def getScores():
     else:
         return jsonify({'success': False}), 405
 
-    # load the config file
-    config_file = configparser.ConfigParser()
-    config_file.read("./config.cfg")
 
     # parse the query according to the type
     db_results = []
@@ -326,7 +333,7 @@ def insertFeedback():
     """
     The feedback insertion endpoint.
     """
-    if request.headers.get("origin") != "http://iuni.iu.edu":
+    if (request.headers.get("origin") not in known_domain) and (request.headers.get("referer") not in known_domain) :
         return jsonify({'success': False}), 405
 
     if request.method == "POST":
@@ -388,4 +395,4 @@ def showFeedbackwithScore():
 
 
 if __name__ == "__main__":
-    api.run(debug=True, port=6060)
+    api.run(debug=True, host='0.0.0.0', port=6060)
