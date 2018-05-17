@@ -237,7 +237,11 @@ def getScores():
         elif isinstance(user_ids_query, str):
             user_ids = list(map(int, user_ids_query.split(",")))
         total_request_number += len(user_ids)
-        db_results += dbQueryUserIDIn(user_ids)
+        try:
+            db_results += dbQueryUserIDIn(user_ids)
+        except:
+            api.logger.warning(user_ids)
+            return jsonify({'success': False}), 400
 
     t2 = time.time()
     #print("Done parsing the query, start to SQL, %.4f" % (t2-t1))
