@@ -20,8 +20,6 @@ current_botometer_version = None
 config_file = configparser.ConfigParser()
 config_file.read("./config.cfg")
 
-known_domain = config_file.get("KnownDomain", "known_domain").split(",")
-
 gunicorn_logger = logging.getLogger('gunicorn.error')
 api.logger.handlers = gunicorn_logger.handlers
 api.logger.setLevel(gunicorn_logger.level)
@@ -202,12 +200,6 @@ def getScores():
     global current_botometer_version
     if not current_botometer_version:
         current_botometer_version = getNewestVersion()
-    #print(request.headers.get("origin"))
-    #print(request.headers.get("Host"))
-    #print(request.headers.get("referer"))
-    if (request.headers.get("origin") not in known_domain) and (request.headers.get("referer") not in known_domain) :
-        print("good")
-        return jsonify({'success': False}), 405
 
     #print("Start to processing ...")
     t1 = time.time()
@@ -337,8 +329,6 @@ def insertFeedback():
     """
     The feedback insertion endpoint.
     """
-    if (request.headers.get("origin") not in known_domain) and (request.headers.get("referer") not in known_domain) :
-        return jsonify({'success': False}), 405
 
     if request.method == "POST":
         try:
