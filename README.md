@@ -1,3 +1,5 @@
+# ATTENTION: This repository has been archived. It cannot be modified any further. The copy here is left for archival reasons. Active development has moved to the [Hoaxy Frontend](https://github.com/IUNetSci/hoaxy-frontend) repository.
+
 # Disclaimer
 
 The name Hoaxy is a trademark of Indiana University. Neither the name "Hoaxy" nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
